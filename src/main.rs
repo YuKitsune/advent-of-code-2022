@@ -4,75 +4,95 @@ mod day02;
 use std::fs;
 use std::io::{Read, stdin};
 
-use clap::{arg, ArgMatches, Command};
+use clap::{Parser, Subcommand, Args};
 
-fn cli() -> Command {
-    Command::new("advent-of-code-2022")
-        .about("Advent of Code 2022")
-        .subcommand_required(true)
-        .subcommand(
-            Command::new("day01")
-                .about("Day 1: Calorie Counting")
-                .arg(arg!(-i --input <PATH> "The path to the input data.")),
-        )
-        .subcommand(
-            Command::new("day02")
-                .about("Day 1: Rock Paper Scissors")
-                .subcommand(
-                    Command::new("part1")
-                        .arg(arg!(-i --input <PATH> "The path to the input data."))
-                    .about("Part 1"))
-                .subcommand(
-                    Command::new("part2")
-                        .arg(arg!(-i --input <PATH> "The path to the input data."))
-                        .about("Part 2"))
-                .subcommand_required(true)
-        )
+#[derive(Debug, Parser)] // requires `derive` feature
+#[command(name = "advent-of-code-2022")]
+#[command(bin_name = "advent-of-code-2022")]
+#[command(about = "Advent of Code 2022", long_about = None)]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
 }
+
+#[derive(Debug, Subcommand)]
+enum Commands {
+    Day01(Part),
+    Day02(Part),
+}
+
+#[derive(Debug, Args)]
+#[command(args_conflicts_with_subcommands = true)]
+struct Part {
+    #[command(subcommand)]
+    command: PartCommands,
+}
+
+#[derive(Debug, Subcommand)]
+#[command(args_conflicts_with_subcommands = true)]
+enum PartCommands {
+    Part1(Arguments),
+    Part2(Arguments)
+}
+
+#[derive(Debug, Args)]
+struct Arguments {
+    #[arg(short, long)]
+    input: Option<String>,
+}
+
+trait HasInput {
+    fn get_input(&self) -> Result<String, Box<dyn std::error::Error>>;
+}
+
+impl HasInput for Arguments {
+    fn get_input(&self) -> Result<String, Box<dyn std::error::Error>> {
+
+        // Try reading from stdin first
+        if atty::isnt(atty::Stream::Stdin) {
+            let mut buffer = String::new();
+            stdin().lock().read_to_string(&mut buffer).unwrap();
+
+            return Ok(buffer)
+        }
+
+        // Otherwise, try using the --input flag
+        if let Some(input_path) = &self.input {
+            let input = fs::read_to_string(input_path).expect("Couldn't find input file");
+            return Ok(input)
+        }
+
+        return Err(Box::from("input was not provided via the --input argument or stdin"))
+    }
+}
+
 
 fn main() {
-    let matches = cli().get_matches();
-
-    match matches.subcommand() {
-        Some(("day01", sub_matches)) => {
-            let input = get_input(sub_matches).unwrap();
-            day01::run(input)
-        }
-
-        Some(("day02", sub_matches)) => {
-            match sub_matches.subcommand() {
-                Some(("part1", sub_matches)) => {
-                    let input = get_input(sub_matches).unwrap();
-                    day02::run_part1(input)
+    let args = Cli::parse();
+    match args.command {
+        Commands::Day01(part) => {
+            match part.command {
+                PartCommands::Part1(args) => {
+                    let input = args.get_input().unwrap();
+                    day01::run_part1(input)
                 },
-                Some(("part2", sub_matches)) => {
-                    let input = get_input(sub_matches).unwrap();
-                    day02::run_part2(input)
-                },
-                _ => unreachable!(),
+                PartCommands::Part2(args) => {
+                    let input = args.get_input().unwrap();
+                    day01::run_part2(input)
+                }
             }
         }
-
-        // If all subcommands are defined above, anything else is unreachabe!()
-        _ => unreachable!(),
+        Commands::Day02(part) => {
+            match part.command {
+                PartCommands::Part1(args) => {
+                    let input = args.get_input().unwrap();
+                    day02::run_part1(input)
+                },
+                PartCommands::Part2(args) => {
+                    let input = args.get_input().unwrap();
+                    day02::run_part2(input)
+                }
+            }
+        }
     }
-}
-
-fn get_input(sub_matches: &ArgMatches) -> Result<String, Box<dyn std::error::Error>> {
-
-    // Try reading from stdin first
-    if atty::isnt(atty::Stream::Stdin) {
-        let mut buffer = String::new();
-        stdin().lock().read_to_string(&mut buffer).unwrap();
-
-        return Ok(buffer)
-    }
-
-    // Otherwise, try using the --input flag
-    if let Some(input_path) = sub_matches.get_one::<String>("input") {
-        let input = fs::read_to_string(input_path).expect("Couldn't find input file");
-        return Ok(input)
-    }
-
-    return Err(Box::from("input was not provided via the --input argument or stdin"))
 }
