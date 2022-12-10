@@ -18,7 +18,15 @@ fn cli() -> Command {
         .subcommand(
             Command::new("day02")
                 .about("Day 1: Rock Paper Scissors")
-                .arg(arg!(-i --input <PATH> "The path to the input data.")),
+                .subcommand(
+                    Command::new("part1")
+                        .arg(arg!(-i --input <PATH> "The path to the input data."))
+                    .about("Part 1"))
+                .subcommand(
+                    Command::new("part2")
+                        .arg(arg!(-i --input <PATH> "The path to the input data."))
+                        .about("Part 2"))
+                .subcommand_required(true)
         )
 }
 
@@ -32,8 +40,17 @@ fn main() {
         }
 
         Some(("day02", sub_matches)) => {
-            let input = get_input(sub_matches).unwrap();
-            day02::run(input)
+            match sub_matches.subcommand() {
+                Some(("part1", sub_matches)) => {
+                    let input = get_input(sub_matches).unwrap();
+                    day02::run_part1(input)
+                },
+                Some(("part2", sub_matches)) => {
+                    let input = get_input(sub_matches).unwrap();
+                    day02::run_part2(input)
+                },
+                _ => unreachable!(),
+            }
         }
 
         // If all subcommands are defined above, anything else is unreachabe!()
