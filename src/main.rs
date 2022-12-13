@@ -104,7 +104,7 @@ fn main() {
                 },
                 PartCommands::Part2(args) => {
                     let input = args.get_input().unwrap();
-                    panic!();
+                    day03::run_part2(input)
                 }
             }
         }
