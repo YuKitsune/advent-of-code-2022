@@ -3,14 +3,8 @@ use std::collections::HashMap;
 pub fn run_part1(input: String) {
 
     let sum: i32 = input.lines()
-        .map(|line: &str| -> (&str, &str) {
-            let split = line.len() / 2;
-            return (&line[0..split], &line[split..line.len()])
-        })
-        .map(|line: (&str, &str)| -> char {
-            let (c1, c2) = line;
-            return find_shared_character(vec!(c1, c2)).unwrap()
-        })
+        .map(|line: &str| -> (&str, &str) { line.split_at(line.len() / 2) })
+        .map(|(s1, s2): (&str, &str)| -> char { find_shared_character(vec![s1, s2]).unwrap() })
         .map(|ch: char| -> i32 { get_priority(ch).unwrap() })
         .sum();
 
