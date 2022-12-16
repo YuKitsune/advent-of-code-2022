@@ -1,6 +1,7 @@
 mod day01;
 mod day02;
 mod day03;
+mod day04;
 
 use std::fs;
 use std::io::{Read, stdin};
@@ -21,6 +22,7 @@ enum Commands {
     Day01(Part),
     Day02(Part),
     Day03(Part),
+    Day04(Part),
 }
 
 #[derive(Debug, Args)]
@@ -105,6 +107,18 @@ fn main() {
                 PartCommands::Part2(args) => {
                     let input = args.get_input().unwrap();
                     day03::run_part2(input)
+                }
+            }
+        }
+        Commands::Day04(part) => {
+            match part.command {
+                PartCommands::Part1(args) => {
+                    let input = args.get_input().unwrap();
+                    day04::run_part1(input)
+                },
+                PartCommands::Part2(args) => {
+                    let input = args.get_input().unwrap();
+                    day04::run_part2(input)
                 }
             }
         }
